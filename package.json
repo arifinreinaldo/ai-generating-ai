@@ -1,0 +1,38 @@
+{
+  "name": "grok-ai-terminal",
+  "version": "1.0.0",
+  "description": "AI-powered code analysis terminal using Grok API",
+  "main": "dist/index.js",
+  "bin": {
+    "grok-terminal": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "keywords": [
+    "ai",
+    "grok",
+    "code-analysis",
+    "terminal",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "dotenv": "^16.3.1",
+    "inquirer": "^8.2.5",
+    "ora": "^5.4.1",
+    "ignore": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^8.2.10",
+    "@types/node": "^20.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
