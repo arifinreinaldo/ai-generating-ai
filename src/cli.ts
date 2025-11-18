@@ -3,25 +3,37 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 import ora from 'ora';
 import { ConfigManager } from './config';
-import { GrokClient } from './grok-client';
+import { AIProvider, ProviderFactory, ProviderType, AVAILABLE_PROVIDERS } from './providers';
 import { ProjectScanner } from './scanner';
 
 export class CLI {
   private configManager: ConfigManager;
-  private grokClient?: GrokClient;
+  private aiProvider?: AIProvider;
 
   constructor() {
     this.configManager = new ConfigManager();
   }
 
-  private async ensureApiKey(): Promise<void> {
+  private async ensureProviderAndApiKey(): Promise<void> {
+    const config = this.configManager.getConfig();
+
+    // Check if provider is set
+    if (!config.provider) {
+      console.log(chalk.yellow('No AI provider configured. Let\'s set one up!\n'));
+      await this.selectProvider();
+    }
+
+    // Check if API key exists
     if (!this.configManager.hasApiKey()) {
-      console.log(chalk.yellow('No API key found. Please configure your Grok API key.'));
+      const providerInfo = ProviderFactory.getProviderInfo(this.configManager.getProvider());
+      console.log(chalk.yellow(`\nNo API key found for ${providerInfo.name}.`));
+      console.log(chalk.gray(`You can also set the ${providerInfo.envVarName} environment variable.\n`));
+
       const { apiKey } = await inquirer.prompt([
         {
           type: 'password',
           name: 'apiKey',
-          message: 'Enter your Grok API key:',
+          message: `Enter your ${providerInfo.name} API key:`,
           validate: (input: string) => input.length > 0 || 'API key is required',
         },
       ]);
@@ -30,24 +42,47 @@ export class CLI {
     }
   }
 
-  private initializeGrokClient(): void {
+  private async selectProvider(): Promise<void> {
+    const choices = AVAILABLE_PROVIDERS.map(provider => ({
+      name: `${provider.name} - ${provider.description}`,
+      value: provider.id,
+    }));
+
+    const { provider } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'provider',
+        message: 'Select your AI provider:',
+        choices,
+      },
+    ]);
+
+    this.configManager.setProvider(provider);
+
+    const providerInfo = ProviderFactory.getProviderInfo(provider);
+    console.log(chalk.green(`\nProvider set to ${providerInfo.name}`));
+  }
+
+  private initializeAIProvider(): void {
     const apiKey = this.configManager.getApiKey();
     if (!apiKey) {
       throw new Error('API key not configured');
     }
 
     const config = this.configManager.getConfig();
-    this.grokClient = new GrokClient(
+    const provider = this.configManager.getProvider();
+
+    this.aiProvider = ProviderFactory.createProvider(provider, {
       apiKey,
-      config.model,
-      config.maxTokens,
-      config.temperature
-    );
+      model: config.model,
+      maxTokens: config.maxTokens,
+      temperature: config.temperature,
+    });
   }
 
   private async analyzeProjectOverview(projectPath: string): Promise<void> {
-    if (!this.grokClient) {
-      throw new Error('Grok client not initialized');
+    if (!this.aiProvider) {
+      throw new Error('AI provider not initialized');
     }
 
     const spinner = ora('Scanning project...').start();
@@ -60,9 +95,9 @@ export class CLI {
 
       const summary = scanner.generateProjectSummary(scanResult);
 
-      spinner.text = 'Analyzing project with Grok AI...';
+      spinner.text = `Analyzing project with ${this.aiProvider.getProviderName()}...`;
 
-      const analysis = await this.grokClient.analyzeProject(summary);
+      const analysis = await this.aiProvider.analyzeProject(summary);
 
       spinner.succeed(chalk.green('Analysis complete!'));
 
@@ -77,8 +112,8 @@ export class CLI {
   }
 
   private async analyzeSpecificFiles(projectPath: string): Promise<void> {
-    if (!this.grokClient) {
-      throw new Error('Grok client not initialized');
+    if (!this.aiProvider) {
+      throw new Error('AI provider not initialized');
     }
 
     const spinner = ora('Scanning project...').start();
@@ -115,7 +150,7 @@ export class CLI {
         const fileSpinner = ora(`Analyzing ${file.relativePath}...`).start();
 
         try {
-          const analysis = await this.grokClient.analyzeCode(file.content, file.relativePath);
+          const analysis = await this.aiProvider.analyzeCode(file.content, file.relativePath);
 
           fileSpinner.succeed(chalk.green(`Analyzed ${file.relativePath}`));
 
@@ -136,10 +171,12 @@ export class CLI {
 
   private async configureSettings(): Promise<void> {
     const config = this.configManager.getConfig();
+    const providerInfo = ProviderFactory.getProviderInfo(this.configManager.getProvider());
 
     console.log(chalk.cyan('\nCurrent Configuration:'));
+    console.log(chalk.white(`Provider: ${providerInfo.name}`));
     console.log(chalk.white(`API Key: ${config.apiKey ? '***configured***' : 'not set'}`));
-    console.log(chalk.white(`Model: ${config.model}`));
+    console.log(chalk.white(`Model: ${config.model || providerInfo.defaultModel}`));
     console.log(chalk.white(`Max Tokens: ${config.maxTokens}`));
     console.log(chalk.white(`Temperature: ${config.temperature}\n`));
 
@@ -149,6 +186,7 @@ export class CLI {
         name: 'whatToChange',
         message: 'What would you like to configure?',
         choices: [
+          { name: 'AI Provider', value: 'provider' },
           { name: 'API Key', value: 'apiKey' },
           { name: 'Model', value: 'model' },
           { name: 'Max Tokens', value: 'maxTokens' },
@@ -163,8 +201,17 @@ export class CLI {
     }
 
     let newValue: any;
+    let needsReinitialize = false;
 
     switch (whatToChange) {
+      case 'provider':
+        await this.selectProvider();
+        // Clear API key when changing provider
+        this.configManager.saveConfig({ apiKey: undefined });
+        await this.ensureProviderAndApiKey();
+        needsReinitialize = true;
+        break;
+
       case 'apiKey':
         const { apiKey } = await inquirer.prompt([
           {
@@ -175,18 +222,40 @@ export class CLI {
           },
         ]);
         newValue = { apiKey };
+        needsReinitialize = true;
         break;
 
       case 'model':
-        const { model } = await inquirer.prompt([
-          {
-            type: 'input',
-            name: 'model',
-            message: 'Enter model name:',
-            default: config.model,
-          },
-        ]);
-        newValue = { model };
+        // Show available models for current provider
+        if (this.aiProvider) {
+          const availableModels = this.aiProvider.getAvailableModels();
+          const modelChoices = availableModels.map(m => ({ name: m, value: m }));
+          modelChoices.push({ name: 'Custom (enter manually)', value: 'custom' });
+
+          const { modelChoice } = await inquirer.prompt([
+            {
+              type: 'list',
+              name: 'modelChoice',
+              message: 'Select a model:',
+              choices: modelChoices,
+            },
+          ]);
+
+          if (modelChoice === 'custom') {
+            const { model } = await inquirer.prompt([
+              {
+                type: 'input',
+                name: 'model',
+                message: 'Enter model name:',
+                default: config.model,
+              },
+            ]);
+            newValue = { model };
+          } else {
+            newValue = { model: modelChoice };
+          }
+        }
+        needsReinitialize = true;
         break;
 
       case 'maxTokens':
@@ -200,6 +269,7 @@ export class CLI {
           },
         ]);
         newValue = { maxTokens };
+        needsReinitialize = true;
         break;
 
       case 'temperature':
@@ -214,18 +284,30 @@ export class CLI {
           },
         ]);
         newValue = { temperature };
+        needsReinitialize = true;
         break;
     }
 
-    this.configManager.saveConfig(newValue);
-    console.log(chalk.green('Configuration updated successfully!'));
+    if (newValue) {
+      this.configManager.saveConfig(newValue);
+      console.log(chalk.green('Configuration updated successfully!'));
+    }
+
+    // Reinitialize if needed
+    if (needsReinitialize && this.configManager.hasApiKey()) {
+      this.initializeAIProvider();
+    }
   }
 
   public async run(projectPath?: string): Promise<void> {
-    console.log(chalk.bold.cyan('\n🤖 Grok AI Terminal\n'));
+    const providerInfo = ProviderFactory.getProviderInfo(this.configManager.getProvider());
 
-    await this.ensureApiKey();
-    this.initializeGrokClient();
+    console.log(chalk.bold.cyan('\n🤖 AI Code Analysis Terminal\n'));
+
+    await this.ensureProviderAndApiKey();
+    this.initializeAIProvider();
+
+    console.log(chalk.gray(`Using: ${this.aiProvider?.getProviderName()}\n`));
 
     const targetPath = projectPath || process.cwd();
     const absolutePath = path.resolve(targetPath);
@@ -261,10 +343,6 @@ export class CLI {
 
           case 'config':
             await this.configureSettings();
-            // Reinitialize client if API key changed
-            if (this.configManager.hasApiKey()) {
-              this.initializeGrokClient();
-            }
             break;
 
           case 'exit':
