@@ -4,8 +4,9 @@ import { OpenAIProvider } from './openai';
 import { AnthropicProvider } from './anthropic';
 import { GoogleProvider } from './google';
 import { CohereProvider } from './cohere';
+import { DeepSeekProvider } from './deepseek';
 
-export type ProviderType = 'grok' | 'openai' | 'anthropic' | 'google' | 'cohere';
+export type ProviderType = 'grok' | 'openai' | 'anthropic' | 'google' | 'cohere' | 'deepseek';
 
 export interface ProviderInfo {
   id: ProviderType;
@@ -51,6 +52,13 @@ export const AVAILABLE_PROVIDERS: ProviderInfo[] = [
     defaultModel: 'command',
     envVarName: 'COHERE_API_KEY',
   },
+  {
+    id: 'deepseek',
+    name: 'DeepSeek',
+    description: 'DeepSeek Chat and Coder models - Excellent for code',
+    defaultModel: 'deepseek-chat',
+    envVarName: 'DEEPSEEK_API_KEY',
+  },
 ];
 
 export class ProviderFactory {
@@ -66,6 +74,8 @@ export class ProviderFactory {
         return new GoogleProvider(config);
       case 'cohere':
         return new CohereProvider(config);
+      case 'deepseek':
+        return new DeepSeekProvider(config);
       default:
         throw new Error(`Unknown provider type: ${type}`);
     }
@@ -91,3 +101,4 @@ export { OpenAIProvider } from './openai';
 export { AnthropicProvider } from './anthropic';
 export { GoogleProvider } from './google';
 export { CohereProvider } from './cohere';
+export { DeepSeekProvider } from './deepseek';
