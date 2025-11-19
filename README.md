@@ -23,90 +23,302 @@ An AI-powered code analysis terminal that supports multiple AI providers (Grok, 
 | **Cohere** | command, command-light, command-nightly | [Cohere Dashboard](https://dashboard.cohere.com) |
 | **DeepSeek** | deepseek-chat, deepseek-coder | [DeepSeek Platform](https://platform.deepseek.com) |
 
-## Installation
+## 🚀 Quick Start
 
-### Prerequisites
+**For the impatient:**
 
-- Node.js 18+ installed
-- API key from at least one supported provider
-
-### Setup
-
-1. Clone the repository:
-```bash
+### Windows
+```cmd
+# 1. Install Node.js from https://nodejs.org
+# 2. Open Command Prompt and run:
+cd %USERPROFILE%\Documents
 git clone <repository-url>
 cd ai-generating-ai
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Build the project:
-```bash
-npm run build
-```
-
-4. (Optional) Link globally to use from anywhere:
-```bash
-npm link
-```
-
-## Usage
-
-### Running the Terminal
-
-Run in the current directory:
-```bash
+npm install && npm run build
 npm start
 ```
 
-Or specify a project path:
+### macOS
 ```bash
-npm start /path/to/your/project
+# 1. Install Homebrew and Node.js
+brew install node
+
+# 2. Open Terminal and run:
+cd ~/Documents
+git clone <repository-url>
+cd ai-generating-ai
+npm install && npm run build
+npm start
 ```
 
-If installed globally:
-```bash
-grok-terminal /path/to/your/project
+**On first run**, you'll select your AI provider and enter your API key. That's it!
+
+💡 **Recommended for beginners:** Use **DeepSeek** - excellent code analysis, very affordable.
+
+---
+
+## Installation & Setup
+
+### Platform Requirements
+
+✅ **Windows** (10/11)
+✅ **macOS** (Sequoia 15.x, Sonoma 14.x, Ventura 13.x, and earlier)
+✅ **Linux** (Ubuntu, Debian, Fedora, etc.)
+✅ **Apple Silicon** (M1/M2/M3/M4) - Native support
+
+### Prerequisites
+
+**All Platforms:**
+- Node.js 18+ installed
+- Git installed
+- API key from at least one supported provider
+
+---
+
+### Windows Installation
+
+#### Step 1: Install Node.js
+
+**Option A: Download Installer**
+1. Visit https://nodejs.org/
+2. Download the **LTS version** for Windows
+3. Run the `.msi` installer
+4. Follow the installation wizard (keep default settings)
+5. Verify installation:
+   ```cmd
+   node --version
+   npm --version
+   ```
+
+**Option B: Using Chocolatey**
+```cmd
+choco install nodejs-lts
 ```
 
-### First-Time Setup
+#### Step 2: Clone & Setup
 
-On first run, you'll be prompted to:
-1. **Select an AI provider** - Choose from Grok, OpenAI, Claude, Gemini, Cohere, or DeepSeek
-2. **Enter your API key** - The key will be securely stored in `~/.ai-terminal-config.json`
+Open **Command Prompt** or **PowerShell**:
 
-### API Key Configuration
+```cmd
+# Navigate to your preferred location
+cd %USERPROFILE%\Documents
 
-You can configure API keys in three ways:
+# Clone the repository
+git clone <repository-url>
+cd ai-generating-ai
 
-#### 1. Interactive Prompt (Recommended)
-The CLI will prompt you for your API key on first run.
+# Install dependencies
+npm install
 
-#### 2. Environment Variables
-Set the appropriate environment variable:
-```bash
-export GROK_API_KEY="your-key-here"
-export OPENAI_API_KEY="your-key-here"
-export ANTHROPIC_API_KEY="your-key-here"
-export GOOGLE_API_KEY="your-key-here"
-export COHERE_API_KEY="your-key-here"
-export DEEPSEEK_API_KEY="your-key-here"
+# Build the project
+npm run build
 ```
 
-#### 3. .env File
-Create a `.env` file (use `.env.example` as template):
+#### Step 3: Configure API Key (Windows)
+
+**Method 1: Environment Variable (Session)**
+```cmd
+# Command Prompt
+set DEEPSEEK_API_KEY=your-api-key-here
+
+# PowerShell
+$env:DEEPSEEK_API_KEY="your-api-key-here"
+```
+
+**Method 2: .env File (Recommended)**
+```cmd
+# Copy example file
+copy .env.example .env
+
+# Edit with Notepad
+notepad .env
+```
+
+Add your API key:
 ```env
-# Choose your provider and set the corresponding API key
-GROK_API_KEY=your-grok-api-key-here
-OPENAI_API_KEY=your-openai-api-key-here
-ANTHROPIC_API_KEY=your-anthropic-api-key-here
-GOOGLE_API_KEY=your-google-api-key-here
-COHERE_API_KEY=your-cohere-api-key-here
 DEEPSEEK_API_KEY=your-deepseek-api-key-here
 ```
+
+#### Step 4: Run on Windows
+
+```cmd
+# Analyze current directory
+npm start
+
+# Analyze specific project
+npm start C:\Projects\my-app
+
+# Or with quotes for paths with spaces
+npm start "C:\My Projects\my-app"
+```
+
+**Optional: Global Installation**
+```cmd
+npm link
+grok-terminal C:\Projects\my-app
+```
+
+---
+
+### macOS Installation
+
+#### Step 1: Install Node.js
+
+**Option A: Using Homebrew (Recommended)**
+```bash
+# Install Homebrew if needed
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install Node.js
+brew install node
+
+# Verify installation
+node --version
+npm --version
+```
+
+**Option B: Download Installer**
+1. Visit https://nodejs.org/
+2. Download **LTS version** for macOS
+3. Open the `.pkg` file and follow installer
+4. Verify in Terminal: `node --version`
+
+#### Step 2: Clone & Setup
+
+Open **Terminal** (Cmd + Space, type "Terminal"):
+
+```bash
+# Navigate to your preferred location
+cd ~/Documents
+
+# Clone the repository
+git clone <repository-url>
+cd ai-generating-ai
+
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+```
+
+#### Step 3: Configure API Key (macOS)
+
+**Method 1: Environment Variable (Session)**
+```bash
+export DEEPSEEK_API_KEY="your-api-key-here"
+```
+
+**Method 2: Permanent (Add to shell profile)**
+
+For **zsh** (default on macOS):
+```bash
+echo 'export DEEPSEEK_API_KEY="your-api-key-here"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+For **bash**:
+```bash
+echo 'export DEEPSEEK_API_KEY="your-api-key-here"' >> ~/.bash_profile
+source ~/.bash_profile
+```
+
+**Method 3: .env File (Recommended)**
+```bash
+# Copy example file
+cp .env.example .env
+
+# Edit with your preferred editor
+nano .env
+# or
+open -e .env
+```
+
+Add your API key:
+```env
+DEEPSEEK_API_KEY=your-deepseek-api-key-here
+```
+
+#### Step 4: Run on macOS
+
+```bash
+# Analyze current directory
+npm start
+
+# Analyze specific project
+npm start ~/Projects/my-app
+npm start /Users/yourname/Documents/project
+
+# Relative paths
+npm start ../another-project
+```
+
+**Optional: Global Installation**
+```bash
+npm link
+grok-terminal ~/Projects/my-app
+```
+
+---
+
+## Usage
+
+### First-Time Interactive Setup
+
+The easiest way to get started on **both Windows and macOS**:
+
+```bash
+# Just run the program
+npm start
+```
+
+You'll be guided through:
+1. **Select AI Provider** - Choose from 6 options
+2. **Enter API Key** - Securely stored in your home directory
+3. **Start Analyzing** - Immediate code analysis
+
+### Running the Terminal
+
+**Windows:**
+```cmd
+# Current directory
+npm start
+
+# Specific project
+npm start C:\Projects\my-app
+
+# Path with spaces (use quotes)
+npm start "C:\My Documents\Projects\my-app"
+
+# If globally installed
+grok-terminal C:\Projects\my-app
+```
+
+**macOS:**
+```bash
+# Current directory
+npm start
+
+# Specific project (absolute path)
+npm start ~/Projects/my-app
+npm start /Users/yourname/Documents/my-app
+
+# Relative path
+npm start ../another-project
+
+# If globally installed
+grok-terminal ~/Projects/my-app
+```
+
+### Configuration Storage Locations
+
+**Windows:**
+- Config file: `C:\Users\YourUsername\.ai-terminal-config.json`
+- .env file: `C:\path\to\ai-generating-ai\.env`
+
+**macOS:**
+- Config file: `~/.ai-terminal-config.json`
+- .env file: `~/Documents/ai-generating-ai/.env` (or wherever you cloned)
 
 ## Features Guide
 
@@ -137,17 +349,22 @@ Customize the AI behavior through an interactive menu:
 
 ## Configuration
 
-Configuration is stored in `~/.ai-terminal-config.json`:
+Configuration is automatically saved after first setup:
+
+**Windows:** `C:\Users\YourUsername\.ai-terminal-config.json`
+**macOS/Linux:** `~/.ai-terminal-config.json`
 
 ```json
 {
-  "provider": "grok",
+  "provider": "deepseek",
   "apiKey": "your-api-key",
-  "model": "grok-beta",
+  "model": "deepseek-chat",
   "maxTokens": 4096,
   "temperature": 0.7
 }
 ```
+
+You can manually edit this file or use the interactive configuration menu (`⚙️ Configure settings`).
 
 ## Supported File Types
 
@@ -291,20 +508,99 @@ npm run dev
 
 ## Troubleshooting
 
-### API Key Issues
+### General Issues
+
+**API Key Issues**
 - Ensure your API key is valid and has proper permissions
 - Check that the key is correctly set in config or environment variables
 - Verify you're using the correct provider's API key
 
-### Network Errors
+**Network Errors**
 - Verify internet connection
 - Check if the API endpoint is accessible
 - Consider firewall or proxy settings
 
-### File Scanning Issues
+**File Scanning Issues**
 - Ensure you have read permissions for the project directory
 - Check `.gitignore` patterns if files are being skipped
 - Large files (>1MB) are automatically skipped
+
+---
+
+### Windows-Specific Issues
+
+**"npm is not recognized" Error**
+```cmd
+# Restart terminal after installing Node.js
+# Or add to PATH manually:
+# 1. Search "Environment Variables" in Windows
+# 2. Edit PATH variable
+# 3. Add: C:\Program Files\nodejs\
+```
+
+**Permission Errors**
+```cmd
+# Run Command Prompt as Administrator
+# Right-click → "Run as administrator"
+```
+
+**PowerShell Execution Policy**
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+**Path with Spaces**
+```cmd
+# Always use quotes
+npm start "C:\My Projects\my-app"
+```
+
+**Firewall Blocking Node.js**
+- Windows Security → Firewall & Network Protection
+- Allow Node.js through firewall
+
+---
+
+### macOS-Specific Issues
+
+**Permission Errors**
+```bash
+# Fix npm permissions
+sudo chown -R $(whoami) ~/.npm
+sudo chown -R $(whoami) /usr/local/lib/node_modules
+```
+
+**Using nvm (Recommended)**
+```bash
+# Install nvm to avoid permission issues
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+# Install Node.js via nvm
+nvm install --lts
+nvm use --lts
+```
+
+**Xcode Command Line Tools Required**
+```bash
+xcode-select --install
+```
+
+**"Command not found" after npm link**
+```bash
+# Add npm global bin to PATH
+echo 'export PATH="$PATH:$(npm config get prefix)/bin"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**M1/M2/M3/M4 Apple Silicon**
+- Works natively on ARM64 (no Rosetta needed)
+- If issues occur: `arch -x86_64 npm install`
+
+**macOS Firewall**
+- System Settings → Network → Firewall
+- Allow Node.js if prompted
+
+---
 
 ### Provider-Specific Issues
 
